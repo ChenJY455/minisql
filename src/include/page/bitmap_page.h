@@ -6,9 +6,6 @@
 #include "common/config.h"
 #include "common/macros.h"
 
-// chenjy: Add include file
-#include <iostream>
-
 template <size_t PageSize>
 class BitmapPage {
  public:
