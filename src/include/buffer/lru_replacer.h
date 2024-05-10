@@ -5,6 +5,7 @@
 #include <mutex>
 #include <unordered_set>
 #include <vector>
+#include <algorithm>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -35,9 +36,8 @@ class LRUReplacer : public Replacer {
 
   size_t Size() override;
 
-private:
-  // add your own private member variables here
-  list<frame_id_t> cache;
+ private:
+  list<frame_id_t> buffer_;
 };
 
 #endif  // MINISQL_LRU_REPLACER_H
