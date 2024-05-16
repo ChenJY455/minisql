@@ -75,7 +75,7 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
     uint32_t j = k % 8;
     Field *_field_ = nullptr;
     _type = schema->GetColumn(k)->GetType();
-    serializeSize += Type::GetInstance(_type)->DeserializeFrom(buf + serializeSize, &_field_, ((uint32_t)_bitmap[i] & (uint32_t)(1 << j)) == 1);
+    serializeSize += Type::GetInstance(_type)->DeserializeFrom(buf + serializeSize, &_field_, (uint32_t)_bitmap[i] & (uint32_t)(1 << j));
     fields_.push_back(_field_);
   }
 
