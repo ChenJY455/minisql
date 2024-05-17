@@ -22,12 +22,12 @@
  * 未初始化next_page_id
  */
 void LeafPage::Init(page_id_t page_id, page_id_t parent_id, int key_size, int max_size) {
+  SetSize(0);
   SetPageType(IndexPageType::LEAF_PAGE);
   SetPageId(page_id);
   SetParentPageId(parent_id);
   SetKeySize(key_size);
   SetMaxSize(max_size);
-  SetSize(0);
 }
 
 /**
@@ -118,26 +118,26 @@ std::pair<GenericKey *, RowId> LeafPage::GetItem(int index) { return {KeyAt(inde
  */
 int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) {
   int size = GetSize();
-  for(int i = 0; i < GetSize(); i++) {
-    int cmp_res = KM.CompareKeys(key, KeyAt(i));
-    if(cmp_res == 0) {
-      // If find
-      LOG(INFO) << "Insert key already exist" << endl;
-      break;
-    }
-    else if(cmp_res > 0) {
-      // If key not found, insert in the next place, and adjust following keys
-      for(int j = size; j > i; j++) {
-        SetKeyAt(j, KeyAt(j - 1));
-        SetValueAt(j, ValueAt(j - 1));
-      }
-      SetKeyAt(i, key);
-      SetValueAt(i, value);
-      SetSize(++size);
-      break;
-    }
+  if(size == GetMaxSize()) {
+    LOG(ERROR) << "Insert fail: overflow" << endl;
+    return size;
   }
-  return size;
+  int index = KeyIndex(key, KM);
+  if(index < size && KeyAt(index) == key) {
+    // If found
+    LOG(INFO) << "Insert key already exist" << endl;
+    return size;
+  } else {
+    // If not found
+    for(int i = size; i > index; i--) {
+      SetKeyAt(i, KeyAt(i - 1));
+      SetValueAt(i, ValueAt(i - 1));
+    }
+    SetKeyAt(index, key);
+    SetValueAt(index, value);
+    IncreaseSize(1);
+  }
+  return GetSize();
 }
 
 /*****************************************************************************
@@ -149,15 +149,19 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
 void LeafPage::MoveHalfTo(LeafPage *recipient) {
   int size = GetSize();
   int half_size = (size + 1) / 2;
-  CopyNFrom(PairPtrAt(size - half_size), size);
   recipient->CopyNFrom(PairPtrAt(size - half_size), half_size);
-  SetSize(size - half_size);
+  IncreaseSize(half_size);
+  recipient->IncreaseSize(half_size);
 }
 
 /*
  * Copy starting from items, and copy {size} number of elements into me.
  */
 void LeafPage::CopyNFrom(void *src, int size) {
+  if(size > GetMaxSize()) {
+    LOG(ERROR) << "Copy size overflow" << endl;
+    return;
+  }
   // The first key is not ignored
   PairCopy(PairPtrAt(0), src, size);
   SetSize(size);
@@ -172,11 +176,21 @@ void LeafPage::CopyNFrom(void *src, int size) {
  * If the key does not exist, then return false
  */
 bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM) {
-  for(int i = 0; i < GetSize(); i++) {
-    int cmp_res = KM.CompareKeys(key, KeyAt(i));
+  int start = 0;
+  int end = GetSize() - 1;
+  int mid, cmp_res;
+  while(start <= end) {
+    mid = (start + end) >> 1;
+    cmp_res = KM.CompareKeys(key, KeyAt(mid));
     if(cmp_res == 0) {
-      // If found
+      // Equal
+      value = ValueAt(mid);
       return true;
+    } else if(cmp_res < 0) {
+      end = mid - 1;
+    } else {
+      // If key > mid
+      start = mid + 1;
     }
   }
   return false;
@@ -193,23 +207,32 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  */
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
   int size = GetSize();
-  for(int i = 0; i < GetSize(); i++) {
-    int cmp_res = KM.CompareKeys(key, KeyAt(i));
-    if(cmp_res == 0) {
-      // If find
-      for(int j = i; j < size - 1; j++) {
-        SetKeyAt(j, KeyAt(j + 1));
-        SetValueAt(j, ValueAt(j + 1));
+  if(size == GetMinSize()) {
+    LOG(ERROR) << "Remove underflow" << endl;
+    return size;
+  }
+  int start = 0;
+  int end = size - 1;
+  int mid, cmp_res;
+  while(start <= end) {
+    mid = (start + end) >> 1;
+    cmp_res = KM.CompareKeys(key, KeyAt(mid));
+    if (cmp_res == 0) {
+      // Equal
+      for (int i = mid; i < size - 1; i++) {
+        SetKeyAt(i, KeyAt(i + 1));
+        SetValueAt(i, ValueAt(i + 1));
       }
-      SetSize(--size);
+      IncreaseSize(-1);
       break;
-    }
-    else if(cmp_res > 0) {
-      // If key not found, return immediately
-      break;
+    } else if (cmp_res < 0) {
+      end = mid - 1;
+    } else {
+      // If key > mid
+      start = mid + 1;
     }
   }
-  return size;
+  return GetSize();
 }
 
 /*****************************************************************************
@@ -222,8 +245,12 @@ int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM)
 void LeafPage::MoveAllTo(LeafPage *recipient) {
   int size = GetSize();
   int recp_size = recipient->GetSize();
-  PairCopy(recipient->KeyAt(recp_size), KeyAt(0),size);
-  recipient->SetSize(recp_size + size);
+  if(size + recp_size > recipient->GetMaxSize()) {
+    LOG(ERROR) << "Move overflow" << endl;
+    return;
+  }
+  PairCopy(recipient->PairPtrAt(recp_size), PairPtrAt(0),size);
+  recipient->IncreaseSize(size);
   SetSize(0);
   recipient->SetNextPageId(GetNextPageId());
 }
@@ -238,13 +265,16 @@ void LeafPage::MoveAllTo(LeafPage *recipient) {
 void LeafPage::MoveFirstToEndOf(LeafPage *recipient) {
   int size = GetSize();
   int recp_size = recipient->GetSize();
-  PairCopy(recipient->PairPtrAt(recp_size), PairPtrAt(0), 1);
+  if(size == GetMinSize() || recp_size == recipient->GetMaxSize()) {
+    LOG(ERROR) << "Move overflow or underflow" << endl;
+    return;
+  }
+  recipient->CopyLastFrom(KeyAt(0), ValueAt(0));
   for(int i = 0; i < size - 1; i++) {
     SetKeyAt(i, KeyAt(i + 1));
     SetValueAt(i, ValueAt(i + 1));
   }
-  SetSize(size - 1);
-  recipient->SetSize(recp_size + 1);
+  IncreaseSize(-1);
 }
 
 /*
@@ -254,7 +284,7 @@ void LeafPage::CopyLastFrom(GenericKey *key, const RowId value) {
   int size = GetSize();
   SetKeyAt(size, key);
   SetValueAt(size, value);
-  SetSize(size + 1);
+  IncreaseSize(1);
 }
 
 /*
@@ -263,13 +293,12 @@ void LeafPage::CopyLastFrom(GenericKey *key, const RowId value) {
 void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
   int size = GetSize();
   int recp_size = recipient->GetSize();
-  for(int i = recp_size; i > 0; i--) {
-    recipient->SetKeyAt(i, recipient->KeyAt(i - 1));
-    recipient->SetValueAt(i, recipient->ValueAt(i - 1));
+  if(size == GetMinSize() || recp_size == recipient->GetMaxSize()) {
+    LOG(ERROR) << "Move overflow or underflow" << endl;
+    return;
   }
-  PairCopy(recipient->PairPtrAt(0), PairPtrAt(size - 1), 1);
-  SetSize(size - 1);
-  recipient->SetSize(recp_size + 1);
+  recipient->CopyFirstFrom(KeyAt(size - 1), ValueAt(size - 1));
+  IncreaseSize(-1);
 }
 
 /*
@@ -284,5 +313,5 @@ void LeafPage::CopyFirstFrom(GenericKey *key, const RowId value) {
   }
   SetKeyAt(0, key);
   SetValueAt(0, value);
-  SetSize(size + 1);
+  IncreaseSize(1);
 }
