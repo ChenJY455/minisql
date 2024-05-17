@@ -15,11 +15,14 @@ bool CLOCKReplacer::Victim(frame_id_t *frame_id){
     return false;
   auto iter = clock_list.begin();
   while(true) {
+    // Find by circulation
+    if(iter == clock_list.end())
+      iter = clock_list.begin();
     if(clock_status[*iter] == 1)
       clock_status[*iter] = 0;
     else{
       // if clock_status[*iter] == 0
-      *frame_id = distance(clock_list.begin(), iter);
+      *frame_id = *iter;
       clock_status.erase(*iter);
       clock_list.erase(iter);
       break;
