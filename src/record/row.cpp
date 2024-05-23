@@ -13,12 +13,6 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
   MACH_WRITE_UINT32(buf + serializeSize, fields_num);
   serializeSize += sizeof(uint32_t);
 
-  MACH_WRITE_UINT32(buf + serializeSize, rid_.GetPageId());
-  serializeSize += sizeof(uint32_t);
-
-  MACH_WRITE_UINT32(buf + serializeSize, rid_.GetSlotNum());
-  serializeSize += sizeof(uint32_t);
-
   if(fields_num == 0)
     return serializeSize;
 
@@ -53,13 +47,6 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
   uint32_t _fields_num = MACH_READ_UINT32(buf + serializeSize);
   serializeSize += sizeof(uint32_t);
 
-  uint32_t _page_id = MACH_READ_UINT32(buf + serializeSize);
-  serializeSize += sizeof(uint32_t);
-
-  uint32_t _slot_num = MACH_READ_UINT32(buf + serializeSize);
-  serializeSize += sizeof(uint32_t);
-  rid_.Set(_page_id, _slot_num);
-
   if(_fields_num == 0)
     return serializeSize;
 
@@ -88,7 +75,7 @@ uint32_t Row::GetSerializedSize(Schema *schema) const {
   ASSERT(schema->GetColumnCount() == fields_.size(), "Fields size do not match schema's column size.");
   
   uint32_t serializeSize = 0;
-  serializeSize += sizeof(uint32_t) * 3;
+  serializeSize += sizeof(uint32_t);
 
   if(GetFieldCount() == 0)
     return serializeSize;

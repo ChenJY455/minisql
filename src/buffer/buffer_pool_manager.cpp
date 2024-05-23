@@ -33,6 +33,12 @@ BufferPoolManager::~BufferPoolManager() {
  * 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
  */
 Page *BufferPoolManager::FetchPage(page_id_t page_id) {
+
+  if(page_id == INVALID_PAGE_ID) {
+    //modify by scy
+    return nullptr;
+  }
+
   int frame_id;
   if(page_table_.find(page_id) != page_table_.end()) {
     // If P exist

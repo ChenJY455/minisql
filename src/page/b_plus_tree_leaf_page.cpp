@@ -120,13 +120,13 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
   int size = GetSize();
   if(size == GetMaxSize()) {
     LOG(ERROR) << "Insert fail: overflow" << endl;
-    return size;
+    return -1;
   }
   int index = KeyIndex(key, KM);
   if(index < size && KeyAt(index) == key) {
     // If found
     LOG(INFO) << "Insert key already exist" << endl;
-    return size;
+    return -2;
   } else {
     // If not found
     for(int i = size; i > index; i--) {
@@ -150,8 +150,7 @@ void LeafPage::MoveHalfTo(LeafPage *recipient) {
   int size = GetSize();
   int half_size = (size + 1) / 2;
   recipient->CopyNFrom(PairPtrAt(size - half_size), half_size);
-  IncreaseSize(half_size);
-  recipient->IncreaseSize(half_size);
+  SetSize(size - half_size);
 }
 
 /*
@@ -204,10 +203,13 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  * existed, perform deletion, otherwise return immediately.
  * NOTE: store key&value pair continuously after deletion
  * @return  page size after deletion
+ * 
+ * by scy
+ * 小于等于min_size允许删除，等于0不允许删除
  */
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
   int size = GetSize();
-  if(size == GetMinSize()) {
+  if(size == 0) {
     LOG(ERROR) << "Remove underflow" << endl;
     return size;
   }

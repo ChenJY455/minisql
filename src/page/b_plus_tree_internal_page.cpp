@@ -71,6 +71,8 @@ void InternalPage::PairCopy(void *dest, void *src, int pair_num) {
  * that contains input "key"
  * Start the search from the second key(the first key should always be invalid)
  * 用了二分查找
+ * by scy
+ * 做了一下修改，查找最后一个小于等于key的位置，方便搜索目标key的插入位置
  */
 page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
   int start = 1;
@@ -89,8 +91,7 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
       start = mid + 1;
     }
   }
-  // Not found
-  return INVALID_PAGE_ID;
+  return ValueAt(end);
 }
 
 /*****************************************************************************
