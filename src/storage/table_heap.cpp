@@ -65,7 +65,7 @@ bool TableHeap::MarkDelete(const RowId &rid, Txn *txn) {
 /**
  * Implement by chenjy
  */
-bool TableHeap::UpdateTuple(const Row &row, const RowId &rid, Txn *txn) {
+bool TableHeap::UpdateTuple(Row &row, const RowId &rid, Txn *txn) {
   // Find the page which contains the tuple.
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
   // If the page could not be found, then abort the recovery.
