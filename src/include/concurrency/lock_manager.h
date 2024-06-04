@@ -24,7 +24,11 @@ class TxnManager;
  */
 class LockManager {
  public:
-  enum class LockMode { kNone, kShared, kExclusive };
+  enum class LockMode {
+    kNone,
+    kShared,
+    kExclusive
+  };
 
   /**
    * This class represents a lock request made by a transaction (txn_id)
