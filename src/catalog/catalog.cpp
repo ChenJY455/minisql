@@ -185,7 +185,7 @@ CatalogManager::~CatalogManager() {
  *    - DB_SUCCESS on successful creation of the table and all associated structures.
  */
 dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schema,
-                                    Transaction *txn, TableInfo *&table_info) {
+                                    Txn *txn, TableInfo *&table_info) {
   // Check if the table name already exists in the catalog
   if (table_names_.find(table_name) != table_names_.end()) {
     // Return error if table already exists
@@ -262,7 +262,7 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
  */
 dberr_t CatalogManager::GetTable(const string &table_name, TableInfo *&table_info) {
   // Try to find the table by its name in the catalog
-  auto table_iter = table_names_.find(table_name);
+  auto const table_iter = table_names_.find(table_name);
 
   // Check if the table was found
   if (table_iter == table_names_.end()) {
@@ -271,7 +271,7 @@ dberr_t CatalogManager::GetTable(const string &table_name, TableInfo *&table_inf
   }
 
   // Retrieve the corresponding TableInfo using the ID obtained from table_names_
-  auto info_iter = tables_.find(table_iter->second);
+  auto const info_iter = tables_.find(table_iter->second);
 
   // Check if the retrieval was successful
   if (info_iter == tables_.end()) {
@@ -331,7 +331,7 @@ dberr_t CatalogManager::GetTables(vector<TableInfo *> &tables) const {
  *    - DB_SUCCESS on successful creation of the index and all associated structures.
  */
 dberr_t CatalogManager::CreateIndex(const std::string &table_name, const std::string &index_name,
-                                    const std::vector<std::string> &index_keys, Transaction *txn,
+                                    const std::vector<std::string> &index_keys, Txn *txn,
                                     IndexInfo *&index_info, const std::string &index_type) {
     // Check if the specified table exists in the catalog
     auto const tableIter = table_names_.find(table_name);
