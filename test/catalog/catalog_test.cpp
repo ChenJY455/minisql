@@ -9,7 +9,7 @@ static string db_file_name = "catalog_test.db";
 TEST(CatalogTest, CatalogMetaTest) {
   char *buf = new char[PAGE_SIZE];
   CatalogMeta *meta = CatalogMeta::NewInstance();
-  // fill data
+  // Fill data
   const int table_nums = 16;
   const int index_nums = 24;
   for (auto i = 0; i < table_nums; i++) {
@@ -48,16 +48,17 @@ TEST(CatalogTest, CatalogTableTest) {
   std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                    new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                    new Column("account", TypeId::kTypeFloat, 2, true, false)};
-  auto schema = std::make_shared<Schema>(columns);
+  auto schema = new Schema(columns);
   Txn txn;
   /** You should use DeepCopySchema in CreateTable. **/
-  catalog_01->CreateTable("table-1", schema.get(), &txn, table_info);
+  catalog_01->CreateTable("table-1", schema, &txn, table_info);
   ASSERT_TRUE(table_info != nullptr);
   TableInfo *table_info_02 = nullptr;
   ASSERT_EQ(DB_SUCCESS, catalog_01->GetTable("table-1", table_info_02));
   ASSERT_EQ(table_info, table_info_02);
   auto *table_heap = table_info->GetTableHeap();
   ASSERT_TRUE(table_heap != nullptr);
+  // FIXME: delete db_01
   delete db_01;
   /** Stage 2: Testing catalog loading */
   auto db_02 = new DBStorageEngine(db_file_name, false);
@@ -77,9 +78,9 @@ TEST(CatalogTest, CatalogIndexTest) {
   std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                    new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                    new Column("account", TypeId::kTypeFloat, 2, true, false)};
-  auto schema = std::make_shared<Schema>(columns);
+  auto schema = new Schema(columns);
   Txn txn;
-  catalog_01->CreateTable("table-1", schema.get(), &txn, table_info);
+  catalog_01->CreateTable("table-1", schema, &txn, table_info);
   ASSERT_TRUE(table_info != nullptr);
 
   IndexInfo *index_info = nullptr;

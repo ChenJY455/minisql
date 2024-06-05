@@ -250,7 +250,7 @@ void BPlusTree::Remove(const GenericKey *key, Txn *transaction) {
   }
   if(after_delete_size < deletion_target->GetMinSize()) {
     CoalesceOrRedistribute(deletion_target, transaction);
-    //后续有对parent_page和deletion_target的更新操作，所以可以直接返回 
+    //后续有对parent_page和deletion_target的更新操作，所以可以直接返回
     return;
   }
   BPlusTreeInternalPage *parent_page = reinterpret_cast<BPlusTreeInternalPage *>(buffer_pool_manager_->FetchPage(deletion_target->GetParentPageId()));
@@ -620,7 +620,7 @@ void BPlusTree::ToString(BPlusTreePage *page, BufferPoolManager *bpm) const {
     }*/
   } else {
     auto *internal = reinterpret_cast<InternalPage *>(page);
-    std::cout << "Internal Page: " << internal->GetPageId() << " parent: " << internal->GetParentPageId() 
+    std::cout << "Internal Page: " << internal->GetPageId() << " parent: " << internal->GetParentPageId()
               << " max size: " << internal->GetMaxSize()
               << " size: " << internal->GetSize() << std::endl;
     /*for (int i = 0; i < internal->GetSize(); i++) {
