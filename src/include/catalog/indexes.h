@@ -61,13 +61,19 @@ class IndexInfo {
   }
 
 /**
- * TODO: Student Implement
+ * TODO: Done by cww
+ * Initializes an IndexInfo object with the specified metadata, table information, and buffer pool manager.
+ * This function sets up the necessary structures and configurations for managing the index.
+ *
+ * @param meta_data Pointer to the IndexMetadata object containing metadata for the index.
+ * @param table_info Pointer to the TableInfo object representing the table to which the index belongs.
+ * @param buffer_pool_manager Pointer to the BufferPoolManager responsible for managing buffer pool operations.
  */
-  void Init(IndexMetadata *meta_data, TableInfo *table_info, BufferPoolManager *buffer_pool_manager) {
-    // Step1: init index metadata and table info
-    // Step2: mapping index key to key schema
-    // Step3: call CreateIndex to create the index
-    ASSERT(false, "Not Implemented yet.");
+ void Init(IndexMetadata *meta_data, TableInfo *table_info, BufferPoolManager *buffer_pool_manager) {
+   string const index_type = "bptree"; // In case we need to change index_type later.
+   meta_data_ = meta_data;
+   key_schema_ = Schema::ShallowCopySchema(table_info->GetSchema(), meta_data->key_map_);
+   index_ = CreateIndex(buffer_pool_manager, index_type);
   }
 
   inline Index *GetIndex() { return index_; }

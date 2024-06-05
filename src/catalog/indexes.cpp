@@ -40,10 +40,34 @@ uint32_t IndexMetadata::SerializeTo(char *buf) const {
 }
 
 /**
- * TODO: Student Implement
+ * TODO: Done by cww
+ * Calculates the total size in bytes required to serialize the IndexMetadata object. This total includes the sizes
+ * of various components of the index metadata.
+ *
+ * Components calculated are:
+ * - The size of the index metadata magic number.
+ * - The size of the index ID.
+ * - The size of the index name, including the length of the name and the size to store the length.
+ * - The size of the table ID.
+ * - The size of the key count, which indicates how many keys are in the index.
+ * - The size of the key map, which includes the size of each key mapped to columns in the table schema.
+ *
+ * Each of these sizes is added to compute the total serialized size.
+ *
+ * @return The total serialized size of the index metadata in bytes.
  */
 uint32_t IndexMetadata::GetSerializedSize() const {
-  return 0;
+  uint32_t constexpr size_magic_num = sizeof(INDEX_METADATA_MAGIC_NUM); // Size of the index metadata magic number
+  uint32_t constexpr size_index_id = sizeof(index_id_t); // Size of the index ID
+  uint32_t const size_index_name = sizeof(uint32_t) + index_name_.length(); // Size of the index name (length + content)
+  uint32_t constexpr size_table_id = sizeof(table_id_t); // Size of the table ID
+  uint32_t constexpr size_key_count = sizeof(uint32_t); // Size of the key count
+  uint32_t const size_keymaps = sizeof(uint32_t) * key_map_.size(); // Total size of the key map (number of keys * size of each key)
+
+  uint32_t const size_ser = size_magic_num + size_index_id + size_index_name + size_table_id
+                                + size_key_count + size_keymaps; // Total serialized size
+
+  return size_ser; // Return the calculated serialized size
 }
 
 uint32_t IndexMetadata::DeserializeFrom(char *buf, IndexMetadata *&index_meta) {

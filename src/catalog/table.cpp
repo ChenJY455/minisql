@@ -25,10 +25,31 @@ uint32_t TableMetadata::SerializeTo(char *buf) const {
 }
 
 /**
- * TODO: Student Implement
+ * TODO: Done by cww
+ * Calculates the total size in bytes required to serialize the TableMetadata object. This total includes the sizes
+ * of various components of the table metadata.
+ *
+ * Components calculated are:
+ * - The size of the table metadata magic number.
+ * - The size of the table ID.
+ * - The size of the table name, including the length of the name and the size to store the length.
+ * - The size of the root page ID.
+ * - The size of the table schema, which is determined by calling the schema's GetSerializedSize method.
+ *
+ * Each of these sizes is added to compute the total serialized size.
+ *
+ * @return The total serialized size of the table metadata in bytes.
  */
 uint32_t TableMetadata::GetSerializedSize() const {
-  return 4 + 4 + MACH_STR_SERIALIZED_SIZE(table_name_) + 4 + schema_->GetSerializedSize();
+  uint32_t constexpr size_magic_num = sizeof(uint32_t); // Size of the table metadata magic number
+  uint32_t constexpr size_table_id = sizeof(table_id_); // Size of the table ID
+  uint32_t const size_table_name = sizeof(uint32_t) + table_name_.length(); // Size of the table name (length + content)
+  uint32_t constexpr size_root_page_id = sizeof(page_id_t); // Size of the root page ID
+  uint32_t const size_table_schema = schema_->GetSerializedSize(); // Size of the table schema
+
+  uint32_t const size_ser = size_magic_num + size_table_id + size_table_name + size_root_page_id + size_table_schema; // Total serialized size
+
+  return size_ser; // Return the calculated serialized size
 }
 
 /**
