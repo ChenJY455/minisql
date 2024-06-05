@@ -162,6 +162,7 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
 CatalogManager::~CatalogManager() {
   FlushCatalogMetaPage();
   delete catalog_meta_;
+  // FIXME: delete table
   for (auto iter : tables_) {
     delete iter.second;
   }
@@ -754,4 +755,3 @@ dberr_t CatalogManager::GetTable(const table_id_t table_id, TableInfo *&table_in
   // Return DB_SUCCESS to indicate the operation was successful
   return DB_SUCCESS;
 }
-

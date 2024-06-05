@@ -37,7 +37,7 @@ Column::Column(const Column *other)
 
 /**
 * TODO: Implement by ShenCongyu
-*/
+ */
 uint32_t Column::SerializeTo(char *buf) const {
   uint32_t serializeSize = 0;
 
@@ -62,6 +62,7 @@ uint32_t Column::SerializeTo(char *buf) const {
 
   MACH_WRITE_TO(bool, buf + serializeSize, unique_);
   serializeSize += sizeof(bool);
+
   return serializeSize;
 }
 
@@ -73,6 +74,7 @@ uint32_t Column::GetSerializedSize() const {
     MACH_STR_SERIALIZED_SIZE(name_) +
     sizeof(TypeId) + 
     sizeof(bool) * 2;
+
 }
 
 /**
@@ -102,12 +104,15 @@ uint32_t Column::DeserializeFrom(char *buf, Column *&column) {
 
   uint32_t _table_ind_ = MACH_READ_UINT32(buf + serializeSize);
   serializeSize += sizeof(uint32_t);
+  //LOG(INFO) << "size2 " << serializeSize << std::endl;
 
   bool _nullable_ = MACH_READ_FROM(bool, buf + serializeSize);
   serializeSize += sizeof(bool);
+  //LOG(INFO) << "size2 " << serializeSize << std::endl;
 
   bool _unique_ = MACH_READ_FROM(bool, buf + serializeSize);
   serializeSize += sizeof(bool);
+
   if(_type_ != TypeId::kTypeChar) {
     column = new Column(_name_, _type_, _table_ind_, _nullable_, _unique_);
   } else {

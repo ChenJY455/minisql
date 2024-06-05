@@ -9,7 +9,7 @@ static string db_file_name = "catalog_test.db";
 TEST(CatalogTest, CatalogMetaTest) {
   char *buf = new char[PAGE_SIZE];
   CatalogMeta *meta = CatalogMeta::NewInstance();
-  // fill data
+  // Fill data
   const int table_nums = 16;
   const int index_nums = 24;
   for (auto i = 0; i < table_nums; i++) {
@@ -58,6 +58,7 @@ TEST(CatalogTest, CatalogTableTest) {
   ASSERT_EQ(table_info, table_info_02);
   auto *table_heap = table_info->GetTableHeap();
   ASSERT_TRUE(table_heap != nullptr);
+  // FIXME: delete db_01
   delete db_01;
   /** Stage 2: Testing catalog loading */
   auto db_02 = new DBStorageEngine(db_file_name, false);
