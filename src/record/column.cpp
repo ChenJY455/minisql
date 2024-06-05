@@ -46,7 +46,7 @@ uint32_t Column::SerializeTo(char *buf) const {
 
   MACH_WRITE_UINT32(buf + serializeSize, (uint32_t)name_.length());
   MACH_WRITE_STRING(buf + serializeSize + 4, name_);
-  serializeSize += sizeof(MACH_STR_SERIALIZED_SIZE(name_));
+  serializeSize += MACH_STR_SERIALIZED_SIZE(name_);
 
   MACH_WRITE_TO(TypeId, buf + serializeSize, type_);
   serializeSize += sizeof(TypeId);
@@ -70,7 +70,7 @@ uint32_t Column::SerializeTo(char *buf) const {
  */
 uint32_t Column::GetSerializedSize() const {
   return sizeof(uint32_t) * 3 +
-    sizeof(MACH_STR_SERIALIZED_SIZE(name_)) +
+    MACH_STR_SERIALIZED_SIZE(name_) +
     sizeof(TypeId) + 
     sizeof(bool) * 2;
 }
@@ -87,11 +87,12 @@ uint32_t Column::DeserializeFrom(char *buf, Column *&column) {
     LOG(ERROR) << "column deserialize error" << std::endl;
 
   uint32_t _name_length = MACH_READ_UINT32(buf + serializeSize);
+  serializeSize += sizeof(uint32_t);
   char _name_char_[_name_length + 1];
-  memcpy(_name_char_, buf + serializeSize + 4, _name_length);
+  memcpy(_name_char_, buf + serializeSize, _name_length);
   _name_char_[_name_length] = '\0';
   std::string _name_(_name_char_, _name_length);
-  serializeSize += MACH_STR_SERIALIZED_SIZE(_name_);
+  serializeSize += sizeof(char) * _name_length;
 
   TypeId _type_ = MACH_READ_FROM(TypeId, buf + serializeSize);
   serializeSize += sizeof(TypeId);
@@ -107,12 +108,10 @@ uint32_t Column::DeserializeFrom(char *buf, Column *&column) {
 
   bool _unique_ = MACH_READ_FROM(bool, buf + serializeSize);
   serializeSize += sizeof(bool);
-
   if(_type_ != TypeId::kTypeChar) {
     column = new Column(_name_, _type_, _table_ind_, _nullable_, _unique_);
   } else {
     column = new Column(_name_, _type_, _len_, _table_ind_, _nullable_, _unique_);
   }
-  delete []_name_char_;
   return serializeSize;
 }

@@ -13,7 +13,6 @@ DBStorageEngine::DBStorageEngine(std::string db_name, bool init, uint32_t buffer
   // Initialize components
   disk_mgr_ = new DiskManager(db_file_name_);
   bpm_ = new BufferPoolManager(buffer_pool_size, disk_mgr_);
-
   // Allocate static page for db storage engine
   if (init) {
     page_id_t id;

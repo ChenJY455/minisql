@@ -502,16 +502,16 @@ Page *BPlusTree::FindLeafPage(const GenericKey *key, page_id_t page_id, bool lef
  * updating it.
  */
 void BPlusTree::UpdateRootPageId(int insert_record) {
-  HeaderPage *header_page = reinterpret_cast<HeaderPage *>(buffer_pool_manager_->FetchPage(0));
+  //HeaderPage *header_page = reinterpret_cast<HeaderPage *>(buffer_pool_manager_->FetchPage(0));
   IndexRootsPage *index_roots_page = reinterpret_cast<IndexRootsPage *>(buffer_pool_manager_->FetchPage(INDEX_ROOTS_PAGE_ID));
   if(insert_record) {
     index_roots_page->Insert(index_id_, root_page_id_);
-    header_page->InsertRecord("Record No." + std::to_string(index_id_), root_page_id_);
+    //header_page->InsertRecord("Record No." + std::to_string(index_id_), root_page_id_);
   } else {
     index_roots_page->Update(index_id_, root_page_id_);
-    header_page->UpdateRecord("Record No." + std::to_string(index_id_), root_page_id_);
+    //header_page->UpdateRecord("Record No." + std::to_string(index_id_), root_page_id_);
   }
-  buffer_pool_manager_->UnpinPage(0, true);
+  //buffer_pool_manager_->UnpinPage(0, true);
   buffer_pool_manager_->UnpinPage(INDEX_ROOTS_PAGE_ID, true);
 }
 

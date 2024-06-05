@@ -51,7 +51,7 @@ bool LockManager::LockExclusive(Txn *txn, const RowId &rid) {
   //如果当前持有排他性写锁或共享锁
   if (lock_request_queue.is_writing_ || lock_request_queue.sharing_cnt_ > 0) {
     lock_request_queue.cv_.wait(unique_lock, [&lock_request_queue, txn]() -> bool {
-      return txn->GetState() == TxnState::kAborted || (!lock_request_queue.is_writing_ && 0 == lock_request_queue.sharing_cnt_);
+      return txn->GetState() == TxnState::kAborted || (!lock_request_queue.is_writing_ && lock_request_queue.sharing_cnt_ == 0);
     });
   }
   //检查txn的state是否是abort
@@ -93,7 +93,7 @@ bool LockManager::LockUpgrade(Txn *txn, const RowId &rid) {
   if (lock_request_queue.is_writing_ || lock_request_queue.sharing_cnt_ > 1) {
     lock_request_queue.is_upgrading_ = true;
     lock_request_queue.cv_.wait(unique_lock, [&lock_request_queue, txn]() -> bool {
-      return txn->GetState() == TxnState::kAborted || (!lock_request_queue.is_writing_ && 1 == lock_request_queue.sharing_cnt_);
+      return txn->GetState() == TxnState::kAborted || (!lock_request_queue.is_writing_ && lock_request_queue.sharing_cnt_ == 1);
     });
   }
 
