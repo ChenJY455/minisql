@@ -177,7 +177,7 @@ class LockManager {
    * the lowest transaction id. This also means when exploring neighbors, explore them in sorted order
    * from lowest to highest.
    */
-  bool DFS(txn_id_t txn_id);
+  bool DFS(const txn_id_t txn_id);
 
  private:
   /** Lock table for lock requests. */
