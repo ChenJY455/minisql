@@ -100,4 +100,28 @@ TEST(TupleTest, RowTest) {
   }
   ASSERT_TRUE(table_page.MarkDelete(row.GetRowId(), nullptr, nullptr, nullptr));
   table_page.ApplyDelete(row.GetRowId(), nullptr, nullptr);
+  //测试row包含null_fields
+  std::vector<Column *> my_columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
+                                   new Column("name", TypeId::kTypeChar, 64, 1, true, false),
+                                   new Column("account", TypeId::kTypeFloat, 2, true, false)};
+  std::vector<Field> my_null_fields = {Field(TypeId::kTypeInt, 188),
+                                       Field(TypeId::kTypeChar),
+                                       Field(TypeId::kTypeFloat),};
+  TablePage my_table_page;
+  auto my_schema = new Schema(my_columns);
+  Row my_row(my_null_fields);
+  my_table_page.Init(0, INVALID_PAGE_ID, nullptr, nullptr);
+  my_table_page.InsertTuple(my_row, my_schema, nullptr, nullptr, nullptr);
+  RowId my_first_tuple_rid;
+  ASSERT_TRUE(my_table_page.GetFirstTupleRid(&my_first_tuple_rid));
+  ASSERT_EQ(my_row.GetRowId(), my_first_tuple_rid);
+  Row my_row2(my_row.GetRowId());
+  ASSERT_TRUE(my_table_page.GetTuple(&my_row2, my_schema, nullptr, nullptr));
+  std::vector<Field *> &my_row2_fields = my_row2.GetFields();
+  ASSERT_EQ(3, my_row2_fields.size());
+  ASSERT_EQ(CmpBool::kTrue, my_row2_fields[0]->CompareEquals(my_null_fields[0]));
+  ASSERT_EQ(CmpBool::kNull, my_row2_fields[1]->CompareEquals(my_null_fields[1]));
+  ASSERT_EQ(CmpBool::kNull, my_row2_fields[2]->CompareEquals(my_null_fields[2]));
+  ASSERT_TRUE(my_table_page.MarkDelete(my_row.GetRowId(), nullptr, nullptr, nullptr));
+  my_table_page.ApplyDelete(my_row.GetRowId(), nullptr, nullptr);
 }

@@ -6,6 +6,10 @@
 #include "utils/tree_file_mgr.h"
 #include "utils/utils.h"
 
+#include<algorithm>
+#include<cstdio>
+#include<ctime>
+
 static const std::string db_name = "bp_tree_insert_test.db";
 
 TEST(BPlusTreeTests, SampleTest) {
@@ -56,6 +60,9 @@ TEST(BPlusTreeTests, SampleTest) {
   }
   ASSERT_TRUE(tree.Check());
   // Delete half keys
+  // 增加删除的随机性，打乱delete_seq
+  srand(unsigned(time(0)));
+  random_shuffle(delete_seq.begin(), delete_seq.end());
   for (int i = 0; i < n / 2; i++) {
     tree.Remove(delete_seq[i]);
   }
