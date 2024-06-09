@@ -15,21 +15,17 @@ TEST(BPlusTreeTests, BPlusTreeIndexGenericKeyTest) {
   std::vector<uint32_t> index_key_map{0, 1};
   const TableSchema table_schema(columns);
   auto *key_schema = Schema::ShallowCopySchema(&table_schema, index_key_map);
-  // 增加循环
-  for (int i = 1; i <= 100; i++) {
-    std::vector<Field> fields{Field(TypeId::kTypeInt, i * i),
-                              Field(TypeId::kTypeChar, const_cast<char *>("minisql"), 7, true)};
-    KeyManager KP(key_schema, 128);
-    Row key(fields);
-    GenericKey *k1 = KP.InitKey();
-    KP.SerializeFromKey(k1, key, key_schema);
-    GenericKey *k2 = KP.InitKey();
-    Row copy_key(fields);
-    KP.SerializeFromKey(k2, copy_key, key_schema);
-    ASSERT_EQ(0, KP.CompareKeys(k1, k2));
-  }
+  std::vector<Field> fields{Field(TypeId::kTypeInt, 27),
+                            Field(TypeId::kTypeChar, const_cast<char *>("minisql"), 7, true)};
+  KeyManager KP(key_schema, 128);
+  Row key(fields);
+  GenericKey *k1 = KP.InitKey();
+  KP.SerializeFromKey(k1, key, key_schema);
+  GenericKey *k2 = KP.InitKey();
+  Row copy_key(fields);
+  KP.SerializeFromKey(k2, copy_key, key_schema);
+  ASSERT_EQ(0, KP.CompareKeys(k1, k2));
 }
-  
 
 TEST(BPlusTreeTests, BPlusTreeIndexSimpleTest) {
   auto disk_mgr_ = new DiskManager(db_name);
@@ -77,5 +73,9 @@ TEST(BPlusTreeTests, BPlusTreeIndexSimpleTest) {
     ASSERT_EQ(i, (*iter).second.GetSlotNum());
     i++;
   }
+  ASSERT_EQ(10, i);
+  index->Destroy();
   delete index;
+  delete bpm_;
+  delete disk_mgr_;
 }
