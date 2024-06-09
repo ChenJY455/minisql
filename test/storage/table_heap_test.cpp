@@ -26,6 +26,7 @@ TEST(TableHeapTest, TableHeapSampleTest) {
   std::unordered_map<int64_t, Fields *> row_values;
   uint32_t size = 0;
   TableHeap *table_heap = TableHeap::Create(bpm_, schema.get(), nullptr, nullptr, nullptr);
+  auto itr = table_heap->End();
   for (int i = 0; i < row_nums; i++) {
     int32_t len = RandomUtils::RandomInt(0, 64);
     char *characters = new char[len];
@@ -35,6 +36,14 @@ TEST(TableHeapTest, TableHeapSampleTest) {
                    Field(TypeId::kTypeFloat, RandomUtils::RandomFloat(-999.f, 999.f))};
     Row row(*fields);
     ASSERT_TRUE(table_heap->InsertTuple(row, nullptr));
+
+    if(i == 0)
+      itr = table_heap->Begin(nullptr);
+    else
+      itr++;
+    if(itr->GetRowId().Get() != row.GetRowId().Get())
+      break;
+
     if (row_values.find(row.GetRowId().Get()) != row_values.end()) {
       std::cout << row.GetRowId().Get() << std::endl;
       ASSERT_TRUE(false);

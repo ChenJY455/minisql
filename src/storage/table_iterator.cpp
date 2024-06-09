@@ -6,8 +6,8 @@
 /**
  * Implement by chenjy
  */
-TableIterator::TableIterator(TableHeap *table_heap, RowId rid, Txn *txn):
-  table_heap_(table_heap), row_(rid), txn_(txn) {}
+TableIterator::TableIterator(TableHeap *table_heap, const Row& row, Txn *txn):
+  table_heap_(table_heap), row_(row), txn_(txn) {}
 
 TableIterator::TableIterator(const TableIterator &other) = default;
 
@@ -45,6 +45,7 @@ TableIterator &TableIterator::operator++() {
   RowId next_rid;
   auto page = reinterpret_cast<TablePage *>(table_heap_->buffer_pool_manager_->FetchPage(page_id));
   if(page == nullptr){
+    throw runtime_error("Page not exist");
     LOG(ERROR)<<"Page not exist"<<std::endl;
     return *this;
   }
@@ -55,11 +56,13 @@ TableIterator &TableIterator::operator++() {
     return *this;
   }
   // If last tuple already, turn to next page.
+  auto pre_id = page_id;
   page_id = page->GetNextPageId();
-  table_heap_->buffer_pool_manager_->UnpinPage(page_id, false);
+  table_heap_->buffer_pool_manager_->UnpinPage(pre_id, false);
   while(page_id != INVALID_PAGE_ID) {
     page = reinterpret_cast<TablePage *>(table_heap_->buffer_pool_manager_->FetchPage(page_id));
     if(page == nullptr) {
+      throw runtime_error("Page not exist");
       LOG(ERROR)<<"Page not exist"<<std::endl;
       return *this;
     }
@@ -68,7 +71,7 @@ TableIterator &TableIterator::operator++() {
       table_heap_->buffer_pool_manager_->UnpinPage(page_id,false);
       return *this;
     }
-    auto pre_id = page_id;
+    pre_id = page_id;
     page_id = page->GetNextPageId();
     table_heap_->buffer_pool_manager_->UnpinPage(pre_id, false);
   }
@@ -81,5 +84,5 @@ TableIterator &TableIterator::operator++() {
 TableIterator TableIterator::operator++(int) {
   const TableIterator temp(*this);
   ++(*this);
-  return TableIterator(temp);
+  return temp;
 }

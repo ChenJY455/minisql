@@ -10,40 +10,39 @@ bool TableHeap::InsertTuple(Row &row, Txn *txn) {
   }
   // Define iterator to find available page.
   int cur_id = first_page_id_;
+  int prev_id = first_page_id_;
   while(cur_id != INVALID_PAGE_ID) {
     auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(cur_id));
     if(page == nullptr) {
       LOG(WARNING) << "TablePage has unavailable records" << endl;
       return false;
     }
-    page->WLatch();
+//    page->WLatch();
     if(page->InsertTuple(row, schema_, txn, lock_manager_, log_manager_)) {
       // If insert successfully
-      page->WUnlatch();
+//      page->WUnlatch();
       buffer_pool_manager_->UnpinPage(cur_id, true);
       return true;
     }
-    page->WUnlatch();
-    if(page->GetNextPageId() == INVALID_PAGE_ID)
-      break;
-    else
-      cur_id = page->GetNextPageId();
-    buffer_pool_manager_->UnpinPage(cur_id, false);
+//  page->WUnlatch();
+    prev_id = cur_id;
+    buffer_pool_manager_->UnpinPage(prev_id, false);
+    cur_id = page->GetNextPageId();
   }
 
   // If no page available, create new one
   page_id_t new_id;
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(new_id));
-  page->Init(new_id, cur_id, log_manager_, txn);
-  page->WLatch();
-  page->InsertTuple(row,schema_,txn,lock_manager_,log_manager_);
-  page->WUnlatch();
-  buffer_pool_manager_->UnpinPage(new_id,true);
+  page->Init(new_id, prev_id, log_manager_, txn);
+//  page->WLatch();
+  page->InsertTuple(row, schema_, txn, lock_manager_, log_manager_);
+//  page->WUnlatch();
+  buffer_pool_manager_->UnpinPage(new_id, true);
 
   // Update last page ptr
-  auto pre_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(cur_id));
+  auto pre_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(prev_id));
   pre_page->SetNextPageId(new_id);
-  buffer_pool_manager_->UnpinPage(cur_id,true);
+  buffer_pool_manager_->UnpinPage(prev_id, true);
   return true;
 }
 
@@ -156,8 +155,10 @@ TableIterator TableHeap::Begin(Txn *txn) {
     auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(cur_page));
     RowId first_rid;
     if(page->GetFirstTupleRid(&first_rid)){
-      buffer_pool_manager_->UnpinPage(cur_page,false);
-      return TableIterator(this, first_rid, txn);
+      Row *first_row = new Row(first_rid);
+      page->GetTuple(first_row, schema_, txn, lock_manager_);
+      buffer_pool_manager_->UnpinPage(cur_page, false);
+      return TableIterator(this, *first_row, txn);
     }
     buffer_pool_manager_->UnpinPage(cur_page,false);
     cur_page = page->GetNextPageId();
