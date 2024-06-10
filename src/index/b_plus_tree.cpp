@@ -448,15 +448,7 @@ IndexIterator BPlusTree::Begin(const GenericKey *key) {
  * @return : index iterator
  */
 IndexIterator BPlusTree::End() {
-  BPlusTreeLeafPage *leaf_page = reinterpret_cast<BPlusTreeLeafPage *>(FindLeafPage(nullptr, -1, true));
-  page_id_t leaf_page_id = leaf_page->GetPageId();
-  while(leaf_page->GetNextPageId() != INVALID_PAGE_ID) {
-    leaf_page = reinterpret_cast<BPlusTreeLeafPage *>(buffer_pool_manager_->FetchPage(leaf_page->GetNextPageId()));
-    buffer_pool_manager_->UnpinPage(leaf_page_id, false);
-    leaf_page_id = leaf_page->GetPageId();
-  }
-  buffer_pool_manager_->UnpinPage(leaf_page_id, false);
-  return IndexIterator(leaf_page_id, buffer_pool_manager_, leaf_page->GetSize() - 1);
+  return IndexIterator(INVALID_PAGE_ID, buffer_pool_manager_, 0);
 }
 
 /*****************************************************************************
