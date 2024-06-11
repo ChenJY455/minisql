@@ -162,7 +162,6 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
 CatalogManager::~CatalogManager() {
   FlushCatalogMetaPage();
   delete catalog_meta_;
-  // FIXME: delete table
   for (auto iter : tables_) {
     delete iter.second;
   }

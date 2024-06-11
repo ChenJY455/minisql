@@ -52,6 +52,7 @@ TableIterator &TableIterator::operator++() {
   // If has next tuple. (This is not the last tuple)
   if(page->GetNextTupleRid(rid, &next_rid)){
     row_.SetRowId(next_rid);
+    table_heap_->GetTuple(&row_, txn_);
     table_heap_->buffer_pool_manager_->UnpinPage(page_id, false);
     return *this;
   }
@@ -68,6 +69,7 @@ TableIterator &TableIterator::operator++() {
     }
     if(page->GetFirstTupleRid(&next_rid)) {
       row_.SetRowId(next_rid);
+      table_heap_->GetTuple(&row_, txn_);
       table_heap_->buffer_pool_manager_->UnpinPage(page_id,false);
       return *this;
     }
