@@ -386,7 +386,7 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode astNode, ExecuteContext *e
     }
 
     // Process columns
-    for (columnNode = astNode->child_->next_->child_; columnNode && std::string(columnNode->val_) != "primary keys"; columnNode = columnNode->next_) {
+    for (columnNode = astNode->child_->next_->child_; columnNode && columnNode->val_ && std::string(columnNode->val_) != "primary keys"; columnNode = columnNode->next_) {
         std::string columnName = columnNode->child_->val_;
         std::string columnType = columnNode->child_->next_->val_;
         bool isUnique = std::find(primaryKeyNames.begin(), primaryKeyNames.end(), columnName) != primaryKeyNames.end();
@@ -420,10 +420,10 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode astNode, ExecuteContext *e
     }
 
     // Create table and indexes
-    auto schema = std::make_shared<Schema>(columns);
+    auto schema = new Schema(columns);
     Txn transaction;
     TableInfo* tableInfo = nullptr;
-    dbs_[current_db_]->catalog_mgr_->CreateTable(tableName, schema.get(), &transaction, tableInfo);
+    dbs_[current_db_]->catalog_mgr_->CreateTable(tableName, schema, &transaction, tableInfo);
 
     for (auto column : columns) {
         if (column->IsUnique()) {
