@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
       exit(1);
     }
     yy_switch_to_buffer(bp);
-
     // init parser module
     MinisqlParserInit();
 
@@ -66,8 +65,8 @@ int main(int argc, char **argv) {
     } else {
       // Comment them out if you don't need to debug the syntax tree
 //      printf("[INFO] Sql syntax parse ok!\n");
-      SyntaxTreePrinter printer(MinisqlGetParserRootNode());
-      printer.PrintTree(syntax_tree_file_mgr[syntax_tree_id++]);
+//      SyntaxTreePrinter printer(MinisqlGetParserRootNode());
+//      printer.PrintTree(syntax_tree_file_mgr[syntax_tree_id++]);
     }
 
     auto result = engine.Execute(MinisqlGetParserRootNode());

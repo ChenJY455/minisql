@@ -34,6 +34,7 @@ ExecuteEngine::ExecuteEngine() {
   /** When you have completed all the code for
    *  the test, run it using main.cpp and uncomment
    *  this part of the code.
+   **/
   struct dirent *stdir;
   while((stdir = readdir(dir)) != nullptr) {
     if( strcmp( stdir->d_name , "." ) == 0 ||
@@ -42,7 +43,6 @@ ExecuteEngine::ExecuteEngine() {
       continue;
     dbs_[stdir->d_name] = new DBStorageEngine(stdir->d_name, false);
   }
-   **/
   closedir(dir);
 }
 
@@ -146,6 +146,10 @@ dberr_t ExecuteEngine::Execute(pSyntaxNode ast) {
       return ExecuteQuit(ast, context.get());
     default:
       break;
+  }
+  if(!context) {
+    cout << "No database selected. Please select a database first. (0.0 sec)" << endl;
+    return DB_FAILED;
   }
   // Plan the query.
   Planner planner(context.get());
@@ -264,9 +268,11 @@ dberr_t ExecuteEngine::ExecuteDropDatabase(pSyntaxNode ast, ExecuteContext *cont
   if (dbs_.find(db_name) == dbs_.end()) {
     return DB_NOT_EXIST;
   }
-  remove(db_name.c_str());
+  remove(("./databases/" + db_name).c_str());
   delete dbs_[db_name];
   dbs_.erase(db_name);
+  if (db_name == current_db_)
+    current_db_ = "";
   return DB_SUCCESS;
 }
 
@@ -386,10 +392,11 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode astNode, ExecuteContext *e
     }
 
     // Process columns
-    for (columnNode = astNode->child_->next_->child_; columnNode && columnNode->val_ && std::string(columnNode->val_) != "primary keys"; columnNode = columnNode->next_) {
+    for (columnNode = astNode->child_->next_->child_; !columnNode->val_ || (columnNode && std::string(columnNode->val_) != "primary keys"); columnNode = columnNode->next_) {
         std::string columnName = columnNode->child_->val_;
         std::string columnType = columnNode->child_->next_->val_;
-        bool isUnique = std::find(primaryKeyNames.begin(), primaryKeyNames.end(), columnName) != primaryKeyNames.end();
+        bool isUnique = (std::find(primaryKeyNames.begin(), primaryKeyNames.end(), columnName) != primaryKeyNames.end()) ||
+            (columnNode->val_ && std::string(columnNode->val_) == "unique");
         bool isNullable = !isUnique;
 
         // Check for duplicate column names
@@ -415,7 +422,6 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode astNode, ExecuteContext *e
         } else if (columnType == "float") {
             newColumn = new Column(columnName, kTypeFloat, columns.size(), isNullable, isUnique);
         }
-
         columns.push_back(newColumn);
     }
 
