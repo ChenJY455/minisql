@@ -54,12 +54,12 @@ dberr_t BPlusTreeIndex::ScanKey(const Row &key, vector<RowId> &result, Txn *txn,
     }
   } else if (compare_operator == "<") {
     auto stop_iter = GetBeginIterator(index_key);
-    for (auto iter = GetBeginIterator(); iter != stop_iter; ++iter) {
+    for (auto iter = GetBeginIterator(); iter != stop_iter && iter != end_iter; ++iter) {
       result.emplace_back((*iter).second);
     }
   } else if (compare_operator == "<=") {
     auto stop_iter = GetBeginIterator(index_key);
-    for (auto iter = GetBeginIterator(); iter != stop_iter; ++iter) {
+    for (auto iter = GetBeginIterator(); iter != stop_iter && iter != end_iter; ++iter) {
       result.emplace_back((*iter).second);
     }
     container_.GetValue(index_key, result, txn);
