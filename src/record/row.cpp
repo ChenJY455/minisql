@@ -17,16 +17,16 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
     return serializeSize;
 
   uint32_t cnt = 0;
-  uint32_t bitmap_size = ceil(fields_num*1.0/8);
+  uint32_t bitmap_size = ceil(fields_num * 1.0 / 8);
   char *bitmap = new char[bitmap_size];
-  memset(bitmap, 0, sizeof(bitmap));
+  memset(bitmap, 0, bitmap_size);
   for(auto ite = fields_.begin(); ite != fields_.end(); ite++) {
     if((*ite)->IsNull()) {
       bitmap[cnt / 8] |= 1 << (cnt % 8);
     }
     cnt++;
   }
-  MACH_WRITE_STRING(buf + serializeSize, std::string(bitmap));
+  memcpy(buf + serializeSize, bitmap, bitmap_size * sizeof(char));
   serializeSize += sizeof(char) * bitmap_size;
 
   for(auto ite = fields_.begin(); ite != fields_.end(); ite++) {
@@ -50,7 +50,7 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
   if(_fields_num == 0)
     return serializeSize;
 
-  uint32_t _bitmap_size = ceil(_fields_num*1.0/8);
+  uint32_t _bitmap_size = ceil(_fields_num * 1.0 / 8);
   char *_bitmap = new char[_bitmap_size];
   memcpy(_bitmap, buf + serializeSize, _bitmap_size*sizeof(char));
   serializeSize += sizeof(char) * _bitmap_size;
@@ -80,7 +80,7 @@ uint32_t Row::GetSerializedSize(Schema *schema) const {
   if(GetFieldCount() == 0)
     return serializeSize;
 
-  serializeSize += sizeof(char) * ((GetFieldCount() - 1) / 8 + 1);
+  serializeSize += sizeof(char) * ceil(GetFieldCount() * 1.0 / 8);
 
   for(auto ite = fields_.begin(); ite != fields_.end(); ite++) {
     serializeSize += (*ite)->GetSerializedSize();
