@@ -17,7 +17,7 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
     return serializeSize;
 
   uint32_t cnt = 0;
-  uint32_t bitmap_size = (fields_num - 1) / 8 + 1;
+  uint32_t bitmap_size = ceil(fields_num*1.0/8);
   char *bitmap = new char[bitmap_size];
   memset(bitmap, 0, sizeof(bitmap));
   for(auto ite = fields_.begin(); ite != fields_.end(); ite++) {
@@ -50,7 +50,7 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
   if(_fields_num == 0)
     return serializeSize;
 
-  uint32_t _bitmap_size = (_fields_num - 1) / 8 + 1;
+  uint32_t _bitmap_size = ceil(_fields_num*1.0/8);
   char *_bitmap = new char[_bitmap_size];
   memcpy(_bitmap, buf + serializeSize, _bitmap_size*sizeof(char));
   serializeSize += sizeof(char) * _bitmap_size;
@@ -62,7 +62,7 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
     uint32_t j = k % 8;
     Field *_field_ = nullptr;
     _type = schema->GetColumn(k)->GetType();
-    serializeSize += Type::GetInstance(_type)->DeserializeFrom(buf + serializeSize, &_field_, (uint32_t)_bitmap[i] & (uint32_t)(1 << j));
+    serializeSize += Type::GetInstance(_type)->DeserializeFrom(buf + serializeSize, &_field_, ((uint32_t)_bitmap[i] & (uint32_t)(1 << j)) != 0);
     fields_.push_back(_field_);
   }
 

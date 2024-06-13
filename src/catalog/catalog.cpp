@@ -4,7 +4,7 @@
 void CatalogMeta::SerializeTo(char *buf) const {
   ASSERT(GetSerializedSize() <= PAGE_SIZE, "Failed to serialize catalog metadata to disk.");
   MACH_WRITE_UINT32(buf, CATALOG_METADATA_MAGIC_NUM);
-//  LOG(INFO) << "ser " << (void *)buf << " " << CATALOG_METADATA_MAGIC_NUM << std::endl;
+  //LOG(INFO) << "ser " << (void *)buf << " " << CATALOG_METADATA_MAGIC_NUM << std::endl;
   buf += 4;
   MACH_WRITE_UINT32(buf, table_meta_pages_.size());
   buf += 4;
@@ -22,6 +22,7 @@ void CatalogMeta::SerializeTo(char *buf) const {
     MACH_WRITE_TO(page_id_t, buf, iter.second);
     buf += 4;
   }
+  //LOG(INFO) << "ser2 " << (void *)buf << std::endl;
 }
 
 CatalogMeta *CatalogMeta::DeserializeFrom(char *buf) {
@@ -29,7 +30,9 @@ CatalogMeta *CatalogMeta::DeserializeFrom(char *buf) {
   uint32_t magic_num = MACH_READ_UINT32(buf);
   //LOG(INFO) << "des " << (void *)buf << " " << magic_num << std::endl;
   buf += 4;
+  //LOG(INFO) << magic_num << ' ' << CATALOG_METADATA_MAGIC_NUM << std::endl;
   ASSERT(magic_num == CATALOG_METADATA_MAGIC_NUM, "Failed to deserialize catalog metadata from disk.");
+  
   // get table and index nums
   uint32_t table_nums = MACH_READ_UINT32(buf);
   buf += 4;
