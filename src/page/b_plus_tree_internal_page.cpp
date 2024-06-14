@@ -75,23 +75,23 @@ void InternalPage::PairCopy(void *dest, void *src, int pair_num) {
  * 做了一下修改，查找最后一个小于等于key的位置，方便搜索目标key的插入位置
  */
 page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
-  int start = 1;
-  int end = GetSize() - 1;
-  int mid, cmp_res;
-  while(start <= end) {
-    // mid = (start + end) / 2
-    mid = (start + end) >> 1;
-    cmp_res = KM.CompareKeys(key, KeyAt(mid));
-    if(cmp_res == 0) {
-      // Equal
-      return ValueAt(mid);
-    } else if(cmp_res < 0) {
-      end = mid - 1;
-    } else {
-      start = mid + 1;
+  int left = 1;
+  int right = GetSize()-1;
+  int mid, comp_result;
+  while(left <= right){
+    mid = (left + right) / 2;
+    comp_result = KM.CompareKeys(key,KeyAt(mid));
+    if(comp_result == 0){
+      left = mid + 1;
+    }
+    else if(comp_result < 0){
+      right = mid - 1;
+    }
+    else{
+      left = mid + 1;
     }
   }
-  return ValueAt(end);
+  return ValueAt(left - 1);
 }
 
 /*****************************************************************************
